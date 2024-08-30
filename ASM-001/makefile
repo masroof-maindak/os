@@ -34,4 +34,4 @@ install: $(TARGET)
 uninstall:
 	rm -f $(BINDIR)/$(TARGET)
 
-.PHONY: all clean install uninstall
+.PHONY: all clean install uninstall run

@@ -1,0 +1,3 @@
+[submodule "Jalebi"]
+	path = Jalebi
+	url = https://codeberg.org/masroof-maindak/Jalebi.git

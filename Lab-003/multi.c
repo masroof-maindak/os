@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define LIMIT		 10000000
+#define LIMIT		 1000
 #define THREAD_COUNT 4
 
 uint8_t *sieve;
@@ -62,9 +62,9 @@ int main() {
 		}
 	}
 
-	/* for (int i = 0; i < LIMIT; i++) */
-	/* 	if (sieve[i] != 0) */
-	/* 		printf("%d ", i); */
+	for (int i = 0; i < LIMIT; i++)
+		if (sieve[i] == 1)
+			printf("%d ", i);
 
 	return 0;
 }

@@ -66,5 +66,6 @@ int main() {
 		if (sieve[i] == 1)
 			printf("%d ", i);
 
+	free(sieve);
 	return 0;
 }

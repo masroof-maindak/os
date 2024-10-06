@@ -2,72 +2,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-pthread_mutex_t count_mutex		= PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t condition_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t cond				= PTHREAD_COND_INITIALIZER;
+#define COUNT_DONE	 500
+#define COUNT_HALT1	 199
+#define COUNT_HALT2	 299
+#define RED			 "\033[31m"
+#define GREEN		 "\033[32m"
+#define BLUE		 "\033[34m"
+#define YELLOW		 "\033[1;33m"
+#define RESET		 "\033[0m"
+#define THREAD_COUNT 4
 
-void *functionCount1(void *arg);
-void *functionCount2();
+const char *colours[] = {RED, GREEN, BLUE, YELLOW, NULL};
+pthread_mutex_t mut	  = PTHREAD_MUTEX_INITIALIZER;
+
+void *countFn(void *arg);
 int count = 0;
 
-#define COUNT_DONE	400
-#define COUNT_HALT1 99
-#define COUNT_HALT2 177
-
-#define BOLD_RED	"\033[1m\033[31m"
-#define BOLD_GREEN	"\033[1m\033[32m"
-#define BOLD_YELLOW "\033[1m\033[33m"
-#define BOLD_BLUE	"\033[1m\033[34m"
-#define RESET		"\033[0m"
-
 int main() {
-	pthread_t thread1, thread2, thread3, thread4;
+	pthread_t tid[THREAD_COUNT];
 
-	pthread_create(&thread1, NULL, &functionCount1, BOLD_RED);
-	pthread_create(&thread3, NULL, &functionCount1, BOLD_GREEN);
-	pthread_create(&thread4, NULL, &functionCount1, BOLD_BLUE);
-	pthread_create(&thread2, NULL, &functionCount2, NULL); /* signaller */
-	pthread_join(thread1, NULL);
-	pthread_join(thread2, NULL);
-	pthread_join(thread3, NULL);
-	pthread_join(thread4, NULL);
+	for (int i = 0; i < THREAD_COUNT; i++)
+		pthread_create(&tid[i], NULL, &countFn, (void *)colours[i]);
+
+	for (int i = 0; i < THREAD_COUNT; i++)
+		pthread_join(tid[i], NULL);
 
 	printf(RESET "\n");
 	exit(0);
 }
 
-void *functionCount1(void *arg) {
+void *countFn(void *arg) {
 	const char *col = arg;
 
-	while (1) {
-		pthread_mutex_lock(&condition_mutex);
-		while (count >= COUNT_HALT1 && count <= COUNT_HALT2)
-			pthread_cond_wait(&cond, &condition_mutex);
-		pthread_mutex_unlock(&condition_mutex);
-
-		pthread_mutex_lock(&count_mutex);
-		count++;
-		printf("%s%d ", col, count);
-		pthread_mutex_unlock(&count_mutex);
-
-		if (count >= COUNT_DONE)
-			return (NULL);
+	pthread_mutex_lock(&mut);
+	while (count < COUNT_DONE) {
+		printf("%s%d " RESET, col, count++);
 	}
-}
+	pthread_mutex_unlock(&mut);
 
-void *functionCount2() {
-	while (1) {
-		pthread_mutex_lock(&condition_mutex);
-		if (count < COUNT_HALT1 || count > COUNT_HALT2)
-			pthread_cond_signal(&cond);
-		pthread_mutex_unlock(&condition_mutex);
-
-		pthread_mutex_lock(&count_mutex);
-		count++;
-		printf(BOLD_YELLOW "%d ", count);
-		pthread_mutex_unlock(&count_mutex);
-
-		if (count >= COUNT_DONE)
-			return (NULL);
-	}
+	return NULL;
 }

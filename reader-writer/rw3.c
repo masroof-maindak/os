@@ -72,7 +72,6 @@ void *fn_write(void *arg) {
 		/* ENTRY */
 		sem_wait(&waiter);
 		sem_wait(&resourse);
-		sem_post(&waiter);
 
 		/* CRITICAL SECTION */
 		if (shared == 123) {
@@ -86,6 +85,7 @@ void *fn_write(void *arg) {
 
 		/* EXIT */
 		sem_post(&resourse);
+		sem_post(&waiter);
 	}
 
 	pthread_exit(NULL);

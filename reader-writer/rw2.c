@@ -73,9 +73,8 @@ void *fn_write(void *arg) {
 		/* ENTRY */
 		//-
 		pthread_mutex_lock(&wmutex);
-		writerCount++;
 		/* If the first writer gains access, lock out the readers */
-		if (writerCount == 1)
+		if (++writerCount == 1)
 			sem_wait(&readerAccess);
 		pthread_mutex_unlock(&wmutex);
 		//-
@@ -97,8 +96,7 @@ void *fn_write(void *arg) {
 		/* EXIT */
 		//-
 		pthread_mutex_lock(&wmutex);
-		writerCount--;
-		if (writerCount == 0)
+		if (--writerCount == 0)
 			/* If the last writer releases access, let the readers in */
 			sem_post(&readerAccess);
 		pthread_mutex_unlock(&wmutex);
@@ -120,8 +118,7 @@ void *fn_read(void *arg) {
 		sem_wait(&readerAccess);
 		//---
 		pthread_mutex_lock(&rmutex);
-		readerCount++;
-		if (readerCount == 1)
+		if (++readerCount == 1)
 			/* If first reader's entered, stop writers from entering */
 			sem_wait(&resourse);
 		pthread_mutex_unlock(&rmutex);
@@ -136,8 +133,7 @@ void *fn_read(void *arg) {
 		/* EXIT */
 		//-
 		pthread_mutex_lock(&rmutex);
-		readerCount--;
-		if (readerCount == 0)
+		if (--readerCount == 0)
 			/* If the last reader's left, tell writers they can enter */
 			sem_post(&resourse);
 		pthread_mutex_unlock(&rmutex);

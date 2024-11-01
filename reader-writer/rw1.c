@@ -87,8 +87,7 @@ void *fn_read(void *arg) {
 		/* ENTRY */
 		//-
 		pthread_mutex_lock(&rmutex);
-		readerCount++;
-		if (readerCount == 1)
+		if (++readerCount == 1)
 			/* If first reader's entered, stop writers from entering */
 			sem_wait(&resourse);
 		pthread_mutex_unlock(&rmutex);
@@ -101,8 +100,7 @@ void *fn_read(void *arg) {
 		/* EXIT */
 		//-
 		pthread_mutex_lock(&rmutex);
-		readerCount--;
-		if (readerCount == 0)
+		if (--readerCount == 0)
 			/* If the last reader's left, tell writers they can enter */
 			sem_post(&resourse);
 		pthread_mutex_unlock(&rmutex);

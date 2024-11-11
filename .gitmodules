@@ -1,3 +1,6 @@
 [submodule "Jalebi"]
 	path = Jalebi
 	url = git@github.com:masroof-maindak/Jalebi.git
+[submodule "xv6-riscv"]
+	path = xv6-riscv
+	url = git@github.com:masroof-maindak/xv6-riscv.git

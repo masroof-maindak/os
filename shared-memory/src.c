@@ -9,7 +9,7 @@
 #include "utils.h"
 
 const char *clrs[] = {RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, NULL};
-struct queue *q;
+struct queue q;
 struct semaphores {
 	sem_t mutex;
 	sem_t filled;
@@ -25,9 +25,11 @@ void producer_child(const char *col);
 int main() {
 	pid_t pids[CHILD_COUNT];
 
-	q = create_queue(sizeof(char));
-	if (q == NULL)
+	q = create_queue(CHILD_COUNT / 2, sizeof(short));
+	if (q.arr == MAP_FAILED) {
+		perror("mmap() in create_queue()");
 		return -1;
+	}
 
 	if (init_semaphores() != 0)
 		return -2;
@@ -54,7 +56,7 @@ int main() {
 }
 
 void producer_child(const char *col) {
-	char *n = malloc(sizeof(char));
+	short *n = malloc(sizeof(short));
 	if (n == NULL) {
 		perror("malloc() in producer_child()");
 		return;
@@ -81,26 +83,20 @@ void producer_child(const char *col) {
 }
 
 void consumer_child(const char *col) {
-	char *n = malloc(sizeof(char));
-	if (n == NULL) {
-		perror("malloc() in producer_child()");
-		return;
-	}
+	short n;
 
 	printf("%sConsumer: started\n" RESET, col);
 	for (;;) {
 		sem_wait(&shSems->filled);
 		sem_wait(&shSems->mutex);
 
-		top(q, n);
-		printf("%sConsumer: popped %d from queue\n" RESET, col, *n);
+		n = *(short *)top(q);
+		printf("%sConsumer: popped %d from queue\n" RESET, col, n);
 		dequeue(q);
 
 		sem_post(&shSems->mutex);
 		sem_post(&shSems->empty);
 	}
-
-	free(n);
 }
 
 int init_semaphores() {

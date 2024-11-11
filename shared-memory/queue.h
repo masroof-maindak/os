@@ -3,24 +3,19 @@
 
 #include <stdlib.h>
 
-struct node {
-	char *padding;
-	void *data;
-	struct node *next;
-	struct node *prev;
-};
+#include "bool.h"
 
 struct queue {
 	size_t size;
+	size_t capacity;
 	size_t elemSize;
-	struct node *header;
-	struct node *sentinel;
+	void *arr;
 };
 
-struct queue *create_queue(size_t elemSize);
-void delete_queue(struct queue *q);
-void enqueue(struct queue *q, const void *data);
-void dequeue(struct queue *q);
-void *top(struct queue *q, void *dst);
+struct queue create_queue(size_t numElems, size_t elemSize);
+void delete_queue(struct queue q);
+bool enqueue(struct queue q, const void *data);
+void dequeue(struct queue q);
+void *top(struct queue q);
 
 #endif // QUEUE_H

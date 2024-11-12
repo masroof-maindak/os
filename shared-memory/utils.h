@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 
-#define CHILD_COUNT 2
+#define CHILD_COUNT 6
 #define RESET		"\x1b[0m"
 #define RED			"\x1b[31m"
 #define GREEN		"\x1b[32m"

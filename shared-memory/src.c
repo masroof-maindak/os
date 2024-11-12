@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,8 +9,10 @@
 #include "queue.h"
 #include "utils.h"
 
+#define SLEEP_TIME 0.65 * 100000
+
 const char *clrs[] = {RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, NULL};
-struct queue q;
+struct queue *q;
 struct semaphores {
 	sem_t mutex;
 	sem_t filled;
@@ -26,10 +29,8 @@ int main() {
 	pid_t pids[CHILD_COUNT];
 
 	q = create_queue(CHILD_COUNT / 2, sizeof(short));
-	if (q.arr == MAP_FAILED) {
-		perror("mmap() in create_queue()");
+	if (q == NULL)
 		return -1;
-	}
 
 	if (init_semaphores() != 0)
 		return -2;
@@ -64,10 +65,10 @@ void producer_child(const char *col) {
 
 	srand(time(NULL) + getpid());
 
-	printf("%sProducer: started\n" RESET, col);
+	printf("%sProducer: started - %d\n" RESET, col, getpid());
 	for (;;) {
-		*n = rand() % 256;
-		usleep(0.25 * 100000);
+		*n = rand() % SHRT_MAX;
+		usleep(SLEEP_TIME);
 
 		sem_wait(&shSems->empty);
 		sem_wait(&shSems->mutex);
@@ -85,7 +86,7 @@ void producer_child(const char *col) {
 void consumer_child(const char *col) {
 	short n;
 
-	printf("%sConsumer: started\n" RESET, col);
+	printf("%sConsumer: started - %d\n" RESET, col, getpid());
 	for (;;) {
 		sem_wait(&shSems->filled);
 		sem_wait(&shSems->mutex);
@@ -96,6 +97,8 @@ void consumer_child(const char *col) {
 
 		sem_post(&shSems->mutex);
 		sem_post(&shSems->empty);
+
+		usleep(SLEEP_TIME);
 	}
 }
 

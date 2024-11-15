@@ -105,23 +105,23 @@ void consumer_child(const char *col) {
 int init_semaphores() {
 	shSems = shared_malloc(sizeof(struct semaphores));
 	if (shSems == MAP_FAILED) {
-		perror("mmap for semaphores failed");
+		perror("mmap() in init_semaphores()");
 		return -1;
 	}
 
 	if (sem_init(&shSems->filled, 1, 0) == -1) {
-		perror("sem_init for filled failed");
+		perror("sem_init() - filled");
 		return -2;
 	}
 
 	if (sem_init(&shSems->empty, 1, CHILD_COUNT / 2) == -1) {
-		perror("sem_init for empty failed");
+		perror("sem_init() - empty");
 		sem_destroy(&shSems->filled);
 		return -3;
 	}
 
 	if (sem_init(&shSems->mutex, 1, 1) == -1) {
-		perror("sem_init for mutex failed");
+		perror("sem_init() - mutex ");
 		sem_destroy(&shSems->filled);
 		sem_destroy(&shSems->empty);
 		return -4;

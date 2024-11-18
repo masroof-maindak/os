@@ -9,13 +9,11 @@
 #include "queue.h"
 #include "utils.h"
 
-#define SLEEP_TIME 0.65 * 100000
-
 const char *clrs[] = {RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, NULL};
 struct queue *q;
 struct semaphores {
 	sem_t mutex;
-	sem_t filled;
+	sem_t queued;
 	sem_t empty;
 } *shSems;
 
@@ -67,7 +65,7 @@ void producer_child(const char *col) {
 
 	printf("%sProducer: started - %d\n" RESET, col, getpid());
 	for (;;) {
-		*n = rand() % SHRT_MAX;
+		*n = rand() % (RAND_MAX / SHRT_MAX + 1);
 		usleep(SLEEP_TIME);
 
 		sem_wait(&shSems->empty);
@@ -77,7 +75,7 @@ void producer_child(const char *col) {
 		printf("%sProducer: pushed %d to queue\n" RESET, col, *n);
 
 		sem_post(&shSems->mutex);
-		sem_post(&shSems->filled);
+		sem_post(&shSems->queued);
 	}
 
 	free(n);
@@ -88,7 +86,7 @@ void consumer_child(const char *col) {
 
 	printf("%sConsumer: started - %d\n" RESET, col, getpid());
 	for (;;) {
-		sem_wait(&shSems->filled);
+		sem_wait(&shSems->queued);
 		sem_wait(&shSems->mutex);
 
 		n = *(short *)top(q);
@@ -109,20 +107,20 @@ int init_semaphores() {
 		return -1;
 	}
 
-	if (sem_init(&shSems->filled, 1, 0) == -1) {
+	if (sem_init(&shSems->queued, 1, 0) == -1) {
 		perror("sem_init() - filled");
 		return -2;
 	}
 
 	if (sem_init(&shSems->empty, 1, CHILD_COUNT / 2) == -1) {
 		perror("sem_init() - empty");
-		sem_destroy(&shSems->filled);
+		sem_destroy(&shSems->queued);
 		return -3;
 	}
 
 	if (sem_init(&shSems->mutex, 1, 1) == -1) {
 		perror("sem_init() - mutex ");
-		sem_destroy(&shSems->filled);
+		sem_destroy(&shSems->queued);
 		sem_destroy(&shSems->empty);
 		return -4;
 	}
@@ -132,7 +130,7 @@ int init_semaphores() {
 
 int cleanup_semaphores() {
 	/* TODO(?): error handling */
-	sem_destroy(&shSems->filled);
+	sem_destroy(&shSems->queued);
 	sem_destroy(&shSems->empty);
 	sem_destroy(&shSems->mutex);
 	return shared_free(shSems, sizeof(struct semaphores));
